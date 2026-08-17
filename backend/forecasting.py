@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from xgboost import XGBRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor
 
 
 def mean_absolute_error(y_true, y_pred):
@@ -29,9 +29,8 @@ def train_and_forecast(product_df: pd.DataFrame, horizon_weeks: int = 12) -> dic
     split = int(len(train_df) * 0.85)
     train, test = train_df.iloc[:split], train_df.iloc[split:]
 
-    model = XGBRegressor(
-        n_estimators=100, max_depth=3, learning_rate=0.08,
-        subsample=0.9, colsample_bytree=0.9, random_state=42,
+    model = HistGradientBoostingRegressor(
+        max_iter=150, max_depth=4, learning_rate=0.06, random_state=42
     )
     model.fit(train[FEATURE_COLS], train["units_sold"])
 
