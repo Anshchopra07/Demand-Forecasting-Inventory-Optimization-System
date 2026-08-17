@@ -1,0 +1,7 @@
+backend/
+frontend/
+venv/
+.git/
+README.md
+render.yaml
+Procfile

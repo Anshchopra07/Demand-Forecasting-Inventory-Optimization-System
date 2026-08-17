@@ -1,7 +1,10 @@
 import numpy as np
 import pandas as pd
 from xgboost import XGBRegressor
-from sklearn.metrics import mean_absolute_error
+
+
+def mean_absolute_error(y_true, y_pred):
+    return float(np.mean(np.abs(np.array(y_true) - np.array(y_pred))))
 
 
 def _make_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -27,7 +30,7 @@ def train_and_forecast(product_df: pd.DataFrame, horizon_weeks: int = 12) -> dic
     train, test = train_df.iloc[:split], train_df.iloc[split:]
 
     model = XGBRegressor(
-        n_estimators=250, max_depth=4, learning_rate=0.05,
+        n_estimators=100, max_depth=3, learning_rate=0.08,
         subsample=0.9, colsample_bytree=0.9, random_state=42,
     )
     model.fit(train[FEATURE_COLS], train["units_sold"])
