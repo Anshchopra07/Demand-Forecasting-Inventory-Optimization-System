@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApexDemand | Demand Forecasting & Inventory Optimization</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: rgba(19, 27, 46, 0.75);
+            --bg-card-hover: rgba(26, 37, 63, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-focus: #00f2fe;
+            --accent-blue: #4facfe;
+            --accent-cyan: #00f2fe;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-crimson: #ef4444;
+            --accent-purple: #8b5cf6;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-dim: #6b7280;
+            --shadow-glow: 0 8px 32px 0 rgba(0, 242, 254, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(79, 172, 254, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        /* Header */
+        header {
+            background: rgba(13, 19, 33, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #090d16;
+            font-size: 20px;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+        }
+
+        .brand-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #ffffff, #93c5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--accent-emerald);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-emerald);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .btn-action {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #090d16;
+            border: none;
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.4);
+            color: #090d16;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1440px;
+            margin: 28px auto;
+            padding: 0 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 18px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: transparent;
+        }
+
+        .kpi-card.blue::before { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); }
+        .kpi-card.red::before { background: var(--accent-crimson); }
+        .kpi-card.amber::before { background: var(--accent-amber); }
+        .kpi-card.emerald::before { background: var(--accent-emerald); }
+        .kpi-card.purple::before { background: var(--accent-purple); }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .kpi-title {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-icon-box {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .kpi-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .kpi-subtext {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Controls Section */
+        .controls-bar {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .product-selector-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .selector-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .select-custom {
+            width: 100%;
+            max-width: 380px;
+            background: rgba(9, 13, 22, 0.9);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .select-custom:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.15);
+        }
+
+        .category-pills {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pill-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pill-btn:hover {
+            color: var(--text-main);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .pill-btn.active {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(79, 172, 254, 0.2));
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        /* Main Workspace Layout */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 14px;
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title i {
+            color: var(--accent-cyan);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 380px;
+            width: 100%;
+        }
+
+        /* Metrics Sidebar List */
+        .metrics-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .metric-row {
+            background: rgba(9, 13, 22, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .metric-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .badge-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-critical {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: var(--accent-crimson);
+        }
+
+        .status-reorder {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: var(--accent-amber);
+        }
+
+        .status-healthy {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: var(--accent-emerald);
+        }
+
+        /* Interactive Simulator */
+        .simulator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .simulator-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sim-control {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sim-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .sim-value {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .range-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            transition: background 0.2s;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+        }
+
+        .sim-results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .sim-result-box {
+            background: rgba(9, 13, 22, 0.7);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .sim-result-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .sim-result-num {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .alert-box {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            color: #fde68a;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .alert-box.critical {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .alert-box.healthy {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+        }
+
+        /* SKU Health Table */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .custom-table th {
+            background: rgba(9, 13, 22, 0.8);
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .custom-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .custom-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+        }
+
+        .progress-bar-bg {
+            width: 100px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* Glassmorphic Modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: rgba(19, 27, 46, 0.95);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 520px;
+            padding: 28px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 14px;
+        }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .btn-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .btn-close:hover { color: var(--text-main); }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input, .form-select {
+            background: rgba(9, 13, 22, 0.9);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.15);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px; right: 24px;
+            background: var(--accent-emerald);
+            color: #090d16;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 300;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.active {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div>
+                <div class="brand-title">ApexDemand AI</div>
+                <div class="brand-subtitle">Demand Forecasting & Inventory Optimization System</div>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <div class="status-badge" id="api-status-badge">
+                <div class="status-dot"></div>
+                <span id="api-status-text">Backend Connected</span>
+            </div>
+            <button class="btn-action btn-primary" id="btn-open-add-modal" onclick="openAddModal()">
+                <i class="fa-solid fa-plus"></i> Add New Product
+            </button>
+            <button class="btn-action" onclick="refreshAllData()">
+                <i class="fa-solid fa-rotate-right"></i> Refresh
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+
+        <!-- Executive KPI Bar -->
+        <div class="kpi-grid">
+            <div class="kpi-card blue">
+                <div class="kpi-header">
+                    <span class="kpi-title">Total Active SKUs</span>
+                    <div class="kpi-icon-box" style="background: rgba(0, 242, 254, 0.1); color: var(--accent-cyan);">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpi-total-skus">--</div>
+                <div class="kpi-subtext"><i class="fa-solid fa-layer-group"></i> Active Inventory Catalog</div>
+            </div>
+
+            <div class="kpi-card red">
+                <div class="kpi-header">
+                    <span class="kpi-title">Critical Stockouts</span>
+                    <div class="kpi-icon-box" style="background: rgba(239, 68, 68, 0.1); color: var(--accent-crimson);">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpi-critical-count">--</div>
+                <div class="kpi-subtext" style="color: var(--accent-crimson);"><i class="fa-solid fa-circle-exclamation"></i> Below Safety Stock</div>
+            </div>
+
+            <div class="kpi-card amber">
+                <div class="kpi-header">
+                    <span class="kpi-title">Reorder Threshold</span>
+                    <div class="kpi-icon-box" style="background: rgba(245, 158, 11, 0.1); color: var(--accent-amber);">
+                        <i class="fa-solid fa-cart-flatbed"></i>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpi-reorder-count">--</div>
+                <div class="kpi-subtext" style="color: var(--accent-amber);"><i class="fa-solid fa-clock"></i> Below Reorder Point</div>
+            </div>
+
+            <div class="kpi-card emerald">
+                <div class="kpi-header">
+                    <span class="kpi-title">Healthy Inventory</span>
+                    <div class="kpi-icon-box" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-emerald);">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpi-healthy-count">--</div>
+                <div class="kpi-subtext" style="color: var(--accent-emerald);"><i class="fa-solid fa-shield-check"></i> Optimal Buffer Level</div>
+            </div>
+
+            <div class="kpi-card purple">
+                <div class="kpi-header">
+                    <span class="kpi-title">XGBoost Accuracy Gain</span>
+                    <div class="kpi-icon-box" style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple);">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpi-avg-improvement">--%</div>
+                <div class="kpi-subtext"><i class="fa-solid fa-chart-line-up"></i> MAE Boost vs Naive Baseline</div>
+            </div>
+        </div>
+
+        <!-- Filter & Product Selector Bar -->
+        <div class="controls-bar">
+            <div class="product-selector-group">
+                <span class="selector-label"><i class="fa-solid fa-box"></i> Select SKU:</span>
+                <select id="product-select" class="select-custom" onchange="onProductChange()">
+                    <!-- Options dynamically loaded -->
+                </select>
+            </div>
+
+            <div class="category-pills" id="category-pills">
+                <button class="pill-btn active" onclick="filterByCategory('All')">All Categories</button>
+                <button class="pill-btn" onclick="filterByCategory('Electronics')">Electronics</button>
+                <button class="pill-btn" onclick="filterByCategory('Home')">Home</button>
+                <button class="pill-btn" onclick="filterByCategory('Fitness')">Fitness</button>
+                <button class="pill-btn" onclick="filterByCategory('Grocery')">Grocery</button>
+                <button class="pill-btn" onclick="filterByCategory('Stationery')">Stationery</button>
+            </div>
+        </div>
+
+        <!-- Main Workspace Grid -->
+        <div class="workspace-grid">
+            <!-- Left Chart Panel -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-chart-area"></i>
+                        <span id="chart-product-title">Historical Demand & 12-Week XGBoost Recursive Forecast</span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted);">
+                        <i class="fa-solid fa-circle" style="color: var(--accent-cyan);"></i> History &nbsp;
+                        <i class="fa-solid fa-circle" style="color: var(--accent-purple);"></i> XGBoost Forecast
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Metrics Panel -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-microchip"></i> Model Diagnostics
+                    </div>
+                </div>
+
+                <div class="metrics-list">
+                    <div class="metric-row">
+                        <span class="metric-label">Product ID & Category</span>
+                        <span class="metric-val" id="meta-id-cat">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">XGBoost Test MAE</span>
+                        <span class="metric-val" style="color: var(--accent-emerald);" id="meta-xgb-mae">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Naive Baseline MAE</span>
+                        <span class="metric-val" style="color: var(--text-muted);" id="meta-naive-mae">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Accuracy Improvement</span>
+                        <span class="metric-val" style="color: var(--accent-cyan);" id="meta-improvement">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">12-Wk Forecasted Units</span>
+                        <span class="metric-val" id="meta-12wk-total">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Inventory Status</span>
+                        <span id="meta-status-badge">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Inventory Optimizer & Simulator Panel -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fa-solid fa-sliders"></i> Real-Time Safety Stock & Reorder Point Optimizer
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted);">
+                    Adjust Lead Time & Service Level to simulate inventory risk live
+                </div>
+            </div>
+
+            <div class="simulator-grid">
+                <!-- Controls Column -->
+                <div style="display: flex; flex-direction: column; gap: 18px;">
+                    <div class="sim-control">
+                        <div class="sim-label-row">
+                            <span>Service Level Target (Z-Score)</span>
+                            <span class="sim-value" id="val-service-level">95% (Z = 1.65)</span>
+                        </div>
+                        <input type="range" class="range-slider" id="input-service-level" min="0.90" max="0.99" step="0.04" value="0.95" oninput="updateSimulation()">
+                    </div>
+
+                    <div class="sim-control">
+                        <div class="sim-label-row">
+                            <span>Supplier Lead Time (Days)</span>
+                            <span class="sim-value" id="val-lead-time">14 Days</span>
+                        </div>
+                        <input type="range" class="range-slider" id="input-lead-time" min="3" max="45" step="1" value="14" oninput="updateSimulation()">
+                    </div>
+
+                    <div class="sim-control">
+                        <div class="sim-label-row">
+                            <span>Fixed Order Cost ($/order)</span>
+                            <span class="sim-value" id="val-order-cost">$45.00</span>
+                        </div>
+                        <input type="range" class="range-slider" id="input-order-cost" min="10" max="150" step="5" value="45" oninput="updateSimulation()">
+                    </div>
+                </div>
+
+                <!-- Outputs Column -->
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div class="sim-results-grid">
+                        <div class="sim-result-box">
+                            <div class="sim-result-title">Safety Stock (Buffer)</div>
+                            <div class="sim-result-num" style="color: var(--accent-cyan);" id="res-safety-stock">--</div>
+                        </div>
+
+                        <div class="sim-result-box">
+                            <div class="sim-result-title">Reorder Point (ROP)</div>
+                            <div class="sim-result-num" style="color: var(--accent-amber);" id="res-rop">--</div>
+                        </div>
+
+                        <div class="sim-result-box">
+                            <div class="sim-result-title">Economic Order Qty (EOQ)</div>
+                            <div class="sim-result-num" style="color: var(--accent-purple);" id="res-eoq">--</div>
+                        </div>
+
+                        <div class="sim-result-box">
+                            <div class="sim-result-title">Days of Supply Left</div>
+                            <div class="sim-result-num" style="color: var(--accent-blue);" id="res-days-supply">--</div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Action Alert -->
+                    <div class="alert-box" id="action-recommendation-box">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 20px;"></i>
+                        <div id="action-recommendation-text">Loading optimization scenario...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory SKU Health Grid Table -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fa-solid fa-table-list"></i> Product Catalog Inventory Matrix
+                </div>
+                <button class="btn-action" onclick="exportCSV()">
+                    <i class="fa-solid fa-download"></i> Export CSV Report
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="custom-table" id="summary-table">
+                    <thead>
+                        <tr>
+                            <th>SKU ID</th>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th>Unit Cost</th>
+                            <th>Current Stock</th>
+                            <th>Stock vs ROP</th>
+                            <th>Reorder Point</th>
+                            <th>Safety Stock</th>
+                            <th>EOQ</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Add Product Modal -->
+    <div class="modal-backdrop" id="addProductModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-box-open" style="color: var(--accent-cyan);"></i> Add New Product SKU</div>
+                <button class="btn-close" onclick="closeAddModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="add-product-form" onsubmit="submitAddProduct(event)" class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Product ID / SKU</label>
+                    <input type="text" id="add-pid" class="form-input" placeholder="e.g. SKU-1009">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="add-category" class="form-select">
+                        <option value="Electronics">Electronics</option>
+                        <option value="Home">Home</option>
+                        <option value="Fitness">Fitness</option>
+                        <option value="Grocery">Grocery</option>
+                        <option value="Stationery">Stationery</option>
+                    </select>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" id="add-name" class="form-input" placeholder="e.g. Smart Watch Pro" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Base Weekly Demand</label>
+                    <input type="number" id="add-demand" class="form-input" placeholder="e.g. 180" value="180">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Lead Time (Days)</label>
+                    <input type="number" id="add-leadtime" class="form-input" placeholder="e.g. 14" value="14">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Unit Cost ($)</label>
+                    <input type="number" step="any" id="add-cost" class="form-input" placeholder="e.g. 45.00" value="45.00">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Initial Stock (Units)</label>
+                    <input type="number" id="add-stock" class="form-input" placeholder="e.g. 250" value="250">
+                </div>
+
+                <div class="form-group full" style="margin-top: 10px;">
+                    <button type="submit" id="btn-submit-sku" class="btn-action btn-primary" style="justify-content: center; width: 100%; padding: 12px; cursor: pointer;">
+                        <i class="fa-solid fa-plus-circle"></i> Create SKU & Generate AI Forecast
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fa-solid fa-circle-check" style="font-size: 18px;"></i>
+        <span id="toast-text">Product added successfully!</span>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        const API_BASE = window.STOCKWATCH_API_BASE || "";
+        let globalSummary = null;
+        let currentProductId = null;
+        let forecastChart = null;
+        let currentProductsList = [];
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchSummaryData();
+        });
+
+        async function fetchSummaryData() {
+            try {
+                const res = await fetch(API_BASE + '/api/summary');
+                if (!res.ok) throw new Error('API Error');
+                globalSummary = await res.json();
+                
+                renderKPIs(globalSummary);
+                populateProductDropdown(globalSummary.products);
+                renderTable(globalSummary.products);
+
+                if (globalSummary.products.length > 0 && !currentProductId) {
+                    selectProduct(globalSummary.products[0].product_id);
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('api-status-text').innerText = 'API Connection Error';
+                document.getElementById('api-status-badge').style.borderColor = 'rgba(239,68,68,0.4)';
+                document.getElementById('api-status-badge').style.color = 'var(--accent-crimson)';
+            }
+        }
+
+        function renderKPIs(summary) {
+            document.getElementById('kpi-total-skus').innerText = summary.total_products;
+            document.getElementById('kpi-critical-count').innerText = summary.critical_count;
+            document.getElementById('kpi-reorder-count').innerText = summary.reorder_count;
+            document.getElementById('kpi-healthy-count').innerText = summary.healthy_count;
+            document.getElementById('kpi-avg-improvement').innerText = `+${summary.avg_forecast_improvement_pct}%`;
+        }
+
+        function populateProductDropdown(products) {
+            currentProductsList = products;
+            const select = document.getElementById('product-select');
+            select.innerHTML = '';
+            products.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.product_id;
+                opt.innerText = `${p.product_id} - ${p.name} (${p.category})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function onProductChange() {
+            const select = document.getElementById('product-select');
+            selectProduct(select.value);
+        }
+
+        function filterByCategory(category) {
+            document.querySelectorAll('.pill-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.includes(category));
+            });
+
+            if (!globalSummary) return;
+
+            let filtered = globalSummary.products;
+            if (category !== 'All') {
+                filtered = globalSummary.products.filter(p => p.category === category);
+            }
+            populateProductDropdown(filtered);
+            renderTable(filtered);
+
+            if (filtered.length > 0) {
+                selectProduct(filtered[0].product_id);
+            }
+        }
+
+        async function selectProduct(pid) {
+            currentProductId = pid;
+            document.getElementById('product-select').value = pid;
+
+            try {
+                const [fcRes, invRes] = await Promise.all([
+                    fetch(API_BASE + `/api/forecast/${pid}`),
+                    fetch(API_BASE + `/api/inventory/${pid}`)
+                ]);
+
+                const fcData = await fcRes.json();
+                const invData = await invRes.json();
+
+                renderChart(fcData);
+                renderMetrics(fcData, invData);
+                initSimulatorControls(invData);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderChart(fcData) {
+            document.getElementById('chart-product-title').innerText = `${fcData.name} (${fcData.product_id}) — 26-Wk Demand History & 12-Wk XGBoost Forecast`;
+
+            const historyDates = fcData.history.map(r => r.date);
+            const historyUnits = fcData.history.map(r => r.units_sold);
+
+            const forecastDates = fcData.forecast.map(r => r.date);
+            const forecastUnits = fcData.forecast.map(r => r.units_sold);
+
+            const labels = [...historyDates, ...forecastDates];
+            const historySeries = [...historyUnits, ...Array(forecastDates.length).fill(null)];
+            const forecastSeries = [...Array(historyDates.length - 1).fill(null), historyUnits[historyUnits.length - 1], ...forecastUnits];
+
+            const ctx = document.getElementById('forecastChart').getContext('2d');
+            if (forecastChart) forecastChart.destroy();
+
+            const gradientHist = ctx.createLinearGradient(0, 0, 0, 350);
+            gradientHist.addColorStop(0, 'rgba(0, 242, 254, 0.35)');
+            gradientHist.addColorStop(1, 'rgba(0, 242, 254, 0.0)');
+
+            const gradientFc = ctx.createLinearGradient(0, 0, 0, 350);
+            gradientFc.addColorStop(0, 'rgba(139, 92, 246, 0.35)');
+            gradientFc.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
+
+            forecastChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Historical Demand',
+                            data: historySeries,
+                            borderColor: '#00f2fe',
+                            backgroundColor: gradientHist,
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 3,
+                            pointRadius: 3,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: '12-Wk XGBoost Forecast',
+                            data: forecastSeries,
+                            borderColor: '#8b5cf6',
+                            backgroundColor: gradientFc,
+                            borderDash: [6, 4],
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#8b5cf6',
+                            pointHoverRadius: 7
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(19, 27, 46, 0.95)',
+                            titleFont: { family: 'Outfit', size: 14, weight: 'bold' },
+                            bodyFont: { family: 'Inter', size: 13 },
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            boxPadding: 6
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af', font: { size: 11 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af', font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderMetrics(fcData, invData) {
+            document.getElementById('meta-id-cat').innerText = `${fcData.product_id} • ${fcData.category}`;
+            document.getElementById('meta-xgb-mae').innerText = `${fcData.model_mae} units`;
+            document.getElementById('meta-naive-mae').innerText = `${fcData.baseline_mae} units`;
+            document.getElementById('meta-improvement').innerText = `+${fcData.improvement_pct}%`;
+
+            const totalFc = fcData.forecast.reduce((sum, r) => sum + r.units_sold, 0);
+            document.getElementById('meta-12wk-total').innerText = `${totalFc.toLocaleString()} units`;
+
+            const badge = document.getElementById('meta-status-badge');
+            let badgeClass = 'status-healthy';
+            if (invData.status === 'critical') badgeClass = 'status-critical';
+            else if (invData.status === 'reorder') badgeClass = 'status-reorder';
+            
+            badge.className = `badge-status ${badgeClass}`;
+            badge.innerText = invData.status.toUpperCase();
+        }
+
+        function initSimulatorControls(invData) {
+            document.getElementById('input-lead-time').value = invData.lead_time_days;
+            document.getElementById('val-lead-time').innerText = `${invData.lead_time_days} Days`;
+            updateSimulation();
+        }
+
+        async function updateSimulation() {
+            if (!currentProductId) return;
+
+            const serviceLevel = parseFloat(document.getElementById('input-service-level').value);
+            const leadTime = parseInt(document.getElementById('input-lead-time').value);
+            const orderCost = parseFloat(document.getElementById('input-order-cost').value);
+
+            let zText = "95% (Z = 1.65)";
+            if (serviceLevel >= 0.98) zText = "99% (Z = 2.33)";
+            else if (serviceLevel <= 0.92) zText = "90% (Z = 1.28)";
+
+            document.getElementById('val-service-level').innerText = zText;
+            document.getElementById('val-lead-time').innerText = `${leadTime} Days`;
+            document.getElementById('val-order-cost').innerText = `$${orderCost.toFixed(2)}`;
+
+            try {
+                const res = await fetch(API_BASE + `/api/inventory/${currentProductId}?service_level=${serviceLevel}&lead_time_days=${leadTime}&order_cost=${orderCost}`);
+                const data = await res.json();
+
+                document.getElementById('res-safety-stock').innerText = `${data.safety_stock} units`;
+                document.getElementById('res-rop').innerText = `${data.reorder_point} units`;
+                document.getElementById('res-eoq').innerText = `${data.eoq} units`;
+                document.getElementById('res-days-supply').innerText = `${data.days_of_supply} Days`;
+
+                const alertBox = document.getElementById('action-recommendation-box');
+                const alertText = document.getElementById('action-recommendation-text');
+
+                if (data.status === 'critical') {
+                    alertBox.className = 'alert-box critical';
+                    alertText.innerHTML = `<strong>CRITICAL STOCKOUT RISK:</strong> Current stock (${data.current_stock} units) is below Safety Buffer (${data.safety_stock} units). Issue Purchase Order for <strong>${data.eoq} units</strong> immediately.`;
+                } else if (data.status === 'reorder') {
+                    alertBox.className = 'alert-box';
+                    alertText.innerHTML = `<strong>REORDER WARNING:</strong> Current stock (${data.current_stock} units) breached Reorder Point (${data.reorder_point} units). Schedule order for <strong>${data.eoq} units</strong> within lead time window (${data.lead_time_days} days).`;
+                } else {
+                    alertBox.className = 'alert-box healthy';
+                    alertText.innerHTML = `<strong>HEALTHY INVENTORY:</strong> Stock (${data.current_stock} units) provides ${data.days_of_supply} days of supply. Next expected reorder at ${data.reorder_point} units.`;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderTable(products) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            products.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.onclick = () => selectProduct(p.product_id);
+
+                const stockRatio = Math.min(100, Math.round((p.current_stock / (p.reorder_point * 1.5)) * 100));
+                let barColor = 'var(--accent-emerald)';
+                let badgeClass = 'status-healthy';
+
+                if (p.status === 'critical') {
+                    barColor = 'var(--accent-crimson)';
+                    badgeClass = 'status-critical';
+                } else if (p.status === 'reorder') {
+                    barColor = 'var(--accent-amber)';
+                    badgeClass = 'status-reorder';
+                }
+
+                tr.innerHTML = `
+                    <td style="font-weight: 700; color: var(--accent-cyan);">${p.product_id}</td>
+                    <td style="font-weight: 600;">${p.name}</td>
+                    <td><span style="color: var(--text-muted);">${p.category}</span></td>
+                    <td>$${p.unit_cost.toFixed(2)}</td>
+                    <td style="font-weight: 700;">${p.current_stock}</td>
+                    <td>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: ${stockRatio}%; background: ${barColor};"></div>
+                        </div>
+                        <span style="font-size: 12px; color: var(--text-muted);">${stockRatio}%</span>
+                    </td>
+                    <td>${p.reorder_point}</td>
+                    <td>${p.safety_stock}</td>
+                    <td>${p.eoq}</td>
+                    <td><span class="badge-status ${badgeClass}">${p.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openAddModal() {
+            const nextNum = globalSummary ? globalSummary.total_products + 1001 : 1009;
+            document.getElementById('add-pid').value = `SKU-${nextNum}`;
+            document.getElementById('addProductModal').classList.add('active');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addProductModal').classList.remove('active');
+        }
+
+        async function submitAddProduct(e) {
+            if (e) e.preventDefault();
+
+            const pid = document.getElementById('add-pid').value.trim() || `SKU-${globalSummary ? globalSummary.total_products + 1001 : 1009}`;
+            const name = document.getElementById('add-name').value.trim();
+            const category = document.getElementById('add-category').value;
+            const base_demand = parseFloat(document.getElementById('add-demand').value) || 180;
+            const lead_time_days = parseInt(document.getElementById('add-leadtime').value) || 14;
+            const unit_cost = parseFloat(document.getElementById('add-cost').value) || 45.0;
+            const current_stock = parseFloat(document.getElementById('add-stock').value) || 250;
+
+            if (!name) {
+                alert("Please enter a product name.");
+                return;
+            }
+
+            const payload = {
+                product_id: pid,
+                name: name,
+                category: category,
+                base_demand: base_demand,
+                lead_time_days: lead_time_days,
+                unit_cost: unit_cost,
+                current_stock: current_stock
+            };
+
+            try {
+                const res = await fetch(API_BASE + '/api/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.detail || "Failed to create product");
+                    return;
+                }
+
+                const data = await res.json();
+                closeAddModal();
+                showToast(`Created ${data.name} (${data.product_id}) successfully!`);
+                await fetchSummaryData();
+                selectProduct(data.product_id);
+            } catch (err) {
+                console.error(err);
+                alert("Server error when adding product");
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-text').innerText = msg;
+            t.classList.add('active');
+            setTimeout(() => t.classList.remove('active'), 4000);
+        }
+
+        function refreshAllData() {
+            fetchSummaryData();
+        }
+
+        function exportCSV() {
+            if (!globalSummary) return;
+            let csv = "Product ID,Name,Category,Unit Cost,Current Stock,Reorder Point,Safety Stock,EOQ,Days of Supply,Status,XGBoost Improvement %\n";
+            globalSummary.products.forEach(p => {
+                csv += `"${p.product_id}","${p.name}","${p.category}",${p.unit_cost},${p.current_stock},${p.reorder_point},${p.safety_stock},${p.eoq},${p.days_of_supply},"${p.status}",${p.improvement_pct}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'Demand_Forecasting_Inventory_Report.csv');
+            a.click();
+        }
+    </script>
+</body>
+</html>
